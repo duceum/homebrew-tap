@@ -13,7 +13,7 @@ class AppstorePppPrices < Formula
   depends_on "cryptography" => :no_linkage
   depends_on "python@3.13"
 
-  pypi_packages exclude_packages: ["certifi", "cffi", "cryptography", "pycparser"]
+  pypi_packages exclude_packages: %w[certifi cffi cryptography pycparser]
 
   resource "anyio" do
     url "https://files.pythonhosted.org/packages/61/cc/a381afa6efea9f496eff839d4a6a1aed3bfafc7b3ab4b0d1b243a12573dd/anyio-4.14.2.tar.gz"
