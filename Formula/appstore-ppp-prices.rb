@@ -3,8 +3,8 @@ class AppstorePppPrices < Formula
 
   desc "Bulk-update App Store IAP and subscription prices by purchasing power"
   homepage "https://github.com/duceum/appstore-ppp-pricing-agent-skill"
-  url "https://files.pythonhosted.org/packages/b9/b1/5028e5ce50c2951197865ccfec9006ecba2f25110112f747db43add625d6/appstore_ppp_prices-1.0.1.tar.gz"
-  sha256 "93835f93f83bc6068d53d55482d6b85612f217ffedac8b83f4faed565bcc5323"
+  url "https://files.pythonhosted.org/packages/85/00/007984d0e96ca318b168fe0c21b3ce7802137fe42b0a4622f3d6141ec85d/appstore_ppp_prices-1.1.0.tar.gz"
+  sha256 "4dc565b0305b2e56c3e334a2c38035e381ec216be1fb0e54acb7efd51d5b670b"
   license "MIT"
 
   livecheck do
