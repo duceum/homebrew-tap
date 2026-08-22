@@ -7,6 +7,11 @@ class AppstorePppPrices < Formula
   sha256 "93835f93f83bc6068d53d55482d6b85612f217ffedac8b83f4faed565bcc5323"
   license "MIT"
 
+  livecheck do
+    url :stable
+    strategy :pypi
+  end
+
   # certifi and cryptography come from their own formulae, which also brings cffi and
   # pycparser. Nothing here needs a compiler: the formula versions ship as bottles.
   depends_on "certifi" => :no_linkage
