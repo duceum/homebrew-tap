@@ -1,0 +1,66 @@
+name: Bump appstore-ppp-prices
+
+# Polls PyPI and updates the formula when a new version appears. Lives here rather
+# than in the source repository so it can use the built-in GITHUB_TOKEN: a workflow
+# always has write access to its own repository, and needs no personal access token
+# to reach across into another one.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare PyPI against the formula
+        id: check
+        run: |
+          formula=Formula/appstore-ppp-prices.rb
+          current=$(grep -m1 -oE 'appstore_ppp_prices-[0-9][^/]*\.tar\.gz' "$formula" \
+                    | sed -E 's/appstore_ppp_prices-(.*)\.tar\.gz/\1/')
+          latest=$(curl -fsSL https://pypi.org/pypi/appstore-ppp-prices/json | jq -r .info.version)
+          echo "current=$current latest=$latest"
+          if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+            echo "::error::could not read the latest version from PyPI"
+            exit 1
+          fi
+          if [ "$current" = "$latest" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true"     >> "$GITHUB_OUTPUT"
+            echo "version=$latest"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rewrite url and sha256
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          meta=$(curl -fsSL "https://pypi.org/pypi/appstore-ppp-prices/${{ steps.check.outputs.version }}/json")
+          url=$(printf '%s' "$meta" | jq -r '.urls[] | select(.packagetype=="sdist") | .url')
+          sha=$(printf '%s' "$meta" | jq -r '.urls[] | select(.packagetype=="sdist") | .digests.sha256')
+          [ -n "$url" ] && [ "$url" != "null" ] || { echo "::error::no sdist for this version"; exit 1; }
+
+          f=Formula/appstore-ppp-prices.rb
+          # Only the first url/sha256 pair is the package's own. The rest belong to
+          # resource blocks and are indented four spaces, so they must not be touched.
+          awk -v url="$url" -v sha="$sha" '
+            !du && /^  url "/    { sub(/".*"/, "\"" url "\""); du = 1 }
+            !ds && /^  sha256 "/ { sub(/".*"/, "\"" sha "\""); ds = 1 }
+            { print }
+          ' "$f" > "$f.new" && mv "$f.new" "$f"
+
+          ruby -c "$f"
+          git diff --stat
+
+      - name: Commit
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "appstore-ppp-prices ${{ steps.check.outputs.version }}"
+          git push
